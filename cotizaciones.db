@@ -1,0 +1,70 @@
+/* # Conexión a la base de datos SQLite
+*/
+def init_db():
+    conn = sqlite3.connect('cotizaciones.db')
+    cursor = conn.cursor()
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS cotizaciones (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            numero_cotizacion TEXT UNIQUE,
+            nombre_cliente TEXT,
+            email TEXT,
+            tipo_servicio TEXT,
+            precio REAL,
+            fecha TEXT
+        )
+    ''')
+    conn.commit()
+    conn.close()
+
+/* # Generar un número de cotización único
+*/
+ def generar_numero_cotizacion():
+    return f"COT-2025-{random.randint(1000, 9999)}"
+
+@app.route('/api/generar_cotizacion', methods=['POST'])
+def generar_cotizacion():
+    data = request.json
+    nombre = data.get('nombre')
+    email = data.get('email')
+    servicio = data.get('servicio')
+    descripcion = data.get('descripcion')
+
+    precios = {
+        'constitucion': 1500,
+        'defensa': 2000,
+        'consultoria': 800
+    }
+
+    precio = precios.get(servicio)
+    if precio is None:
+        return jsonify({'error': 'Tipo de servicio no válido.'}), 400
+
+    numero_cotizacion = generar_numero_cotizacion()
+    fecha_creacion = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+    /* # Guardar en la base de datos */
+    conn = sqlite3.connect('cotizaciones.db')
+    cursor = conn.cursor()
+    cursor.execute('''
+        INSERT INTO cotizaciones (numero_cotizacion, nombre_cliente, email, tipo_servicio, precio, fecha)
+        VALUES (?, ?, ?, ?, ?, ?)
+    ''', (numero_cotizacion, nombre, email, servicio, precio, fecha_creacion))
+    conn.commit()
+    conn.close()
+
+    return jsonify({
+        'numero_cotizacion': numero_cotizacion,
+        'precio': precio,
+        'fecha_creacion': fecha_creacion
+    })
+
+if __name__ == '__main__':
+    init_db()
+    app.run(debug=True)
+
+/*
+3. Base de Datos (cotizaciones.db)
+
+La base de datos se creará automáticamente al ejecutar el servidor por primera vez, gracias a la función init_db() en server.py.
+*/

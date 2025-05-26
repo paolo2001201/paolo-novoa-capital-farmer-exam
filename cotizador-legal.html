@@ -1,0 +1,108 @@
+<!--Estructura del Proyecto
+
+    Archivo HTML: cotizador-legal.html
+    Archivo del Servidor: server.py
+    Base de Datos: cotizaciones.db
+
+1. Archivo HTML (cotizador-legal.html)
+
+Modificaremos el archivo HTML para enviar los datos del formulario al servidor.-->
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Cotizador Legal Automático</title>
+  <style>
+    /* Estilos omitidos por brevedad */
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Cotizador Legal</h1>
+    <form id="quoteForm">
+      <label for="clienteNombre">Nombre del Cliente</label>
+      <input type="text" id="clienteNombre" name="clienteNombre" placeholder="Ej: Juan Pérez" required />
+
+      <label for="clienteEmail">Correo Electrónico</label>
+      <input type="email" id="clienteEmail" name="clienteEmail" placeholder="ejemplo@correo.com" required />
+
+      <label for="tipoServicio">Tipo de Servicio</label>
+      <select id="tipoServicio" name="tipoServicio" required>
+        <option value="" disabled selected>Seleccione un servicio</option>
+        <option value="constitucion">Constitución de empresa</option>
+        <option value="defensa">Defensa laboral</option>
+        <option value="consultoria">Consultoría tributaria</option>
+      </select>
+
+      <label for="descripcion">Descripción del Caso</label>
+      <textarea id="descripcion" name="descripcion" placeholder="Breve descripción del caso..." required></textarea>
+
+      <button type="submit">Generar Cotización</button>
+    </form>
+
+    <div id="resultadoCotizacion" class="quote-result" style="display:none;">
+      <h2>Cotización Generada</h2>
+      <div class="quote-item" id="resCotizacion"></div>
+      <div class="quote-item" id="resPrecio"></div>
+      <div class="quote-item" id="resFecha"></div>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      const form = document.getElementById('quoteForm');
+      const resultado = document.getElementById('resultadoCotizacion');
+      const resCotizacion = document.getElementById('resCotizacion');
+      const resPrecio = document.getElementById('resPrecio');
+      const resFecha = document.getElementById('resFecha');
+
+      const precios = {
+        constitucion: 1500,
+        defensa: 2000,
+        consultoria: 800
+      };
+
+      form.addEventListener('submit', async function(event) {
+        event.preventDefault();
+
+        const nombre = form.clienteNombre.value.trim();
+        const email = form.clienteEmail.value.trim();
+        const servicio = form.tipoServicio.value;
+        const descripcion = form.descripcion.value.trim();
+
+        if (!nombre || !email || !servicio || !descripcion) {
+          alert("Por favor, completa todos los campos.");
+          return;
+        }
+
+        const response = await fetch('/api/generar_cotizacion', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            nombre,
+            email,
+            servicio,
+            descripcion
+          })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          resCotizacion.textContent = `Número de Cotización: ${data.numero_cotizacion}`;
+          resPrecio.textContent = `Precio estimado: ${data.precio} SOLES`;
+          resFecha.textContent = `Fecha de creación: ${data.fecha_creacion}`;
+          resultado.style.display = 'block';
+        } else {
+          alert(data.error);
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
+

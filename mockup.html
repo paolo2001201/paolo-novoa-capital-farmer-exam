@@ -1,0 +1,218 @@
+<!-- mockup del proyecto 
+necesito Crear un sistema web básico que genere cotizaciones legales de forma automática 
+que tenga un frontend simple que tenga los siguientes campos: nombre del cliente, correo electronico ,
+ tipo de servicio(constitucion de empresa , defensa laboral , consultoria tributaria) , descripcion del caso y un boton
+  de "generar cotizacion"  -->
+
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Cotizador Legal Automático</title>
+    <style>
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        margin: 0;
+        padding: 0;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #333;
+      }
+      .container {
+        background: white;
+        padding: 2rem 3rem;
+        border-radius: 12px;
+        max-width: 480px;
+        width: 90%;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+      }
+      h1 {
+        text-align: center;
+        color: #4a3fbc;
+        margin-bottom: 1rem;
+      }
+      label {
+        display: block;
+        margin-top: 1rem;
+        font-weight: 600;
+        color: #4a3fbc;
+      }
+      input[type="text"],
+      input[type="email"],
+      select,
+      textarea {
+        width: 100%;
+        padding: 0.5rem;
+        margin-top: 0.25rem;
+        border-radius: 6px;
+        border: 1.5px solid #ccc;
+        font-size: 1rem;
+        transition: border-color 0.3s ease;
+        resize: vertical;
+      }
+      input[type="text"]:focus,
+      input[type="email"]:focus,
+      select:focus,
+      textarea:focus {
+        border-color: #764ba2;
+        outline: none;
+      }
+      textarea {
+        min-height: 80px;
+      }
+      button {
+        margin-top: 1.5rem;
+        width: 100%;
+        padding: 0.75rem;
+        background: #764ba2;
+        border: none;
+        color: white;
+        font-size: 1.1rem;
+        font-weight: 700;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+      }
+      button:hover {
+        background: #5e3680;
+      }
+      .quote-result {
+        margin-top: 2rem;
+        padding: 1rem;
+        background: #eae6f7;
+        border-radius: 8px;
+        border-left: 5px solid #764ba2;
+        color: #333;
+      }
+      .quote-result h2 {
+        margin-top: 0;
+        color: #4a3fbc;
+      }
+      .quote-item {
+        margin-bottom: 0.5rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Cotizador Legal</h1>
+      <form id="quoteForm">
+        <label for="clienteNombre">Nombre del Cliente</label>
+        <input
+          type="text"
+          id="clienteNombre"
+          name="clienteNombre"
+          placeholder="Ej: Juan Pérez"
+          required
+        />
+
+        <label for="clienteEmail">Correo Electrónico</label>
+        <input
+          type="email"
+          id="clienteEmail"
+          name="clienteEmail"
+          placeholder="ejemplo@correo.com"
+          required
+        />
+
+        <label for="tipoServicio">Tipo de Servicio</label>
+        <select id="tipoServicio" name="tipoServicio" required>
+          <option value="" disabled selected>Seleccione un servicio</option>
+          <option value="constitucion">Constitución de empresa</option>
+          <option value="defensa">Defensa laboral</option>
+          <option value="consultoria">Consultoría tributaria</option>
+        </select>
+
+        <label for="descripcion">Descripción del Caso</label>
+        <textarea
+          id="descripcion"
+          name="descripcion"
+          placeholder="Breve descripción del caso..."
+          required
+        ></textarea>
+
+        <button type="submit">Generar Cotización</button>
+      </form>
+
+      <div id="resultadoCotizacion" class="quote-result" style="display: none">
+        <h2>Cotización Generada</h2>
+        <div class="quote-item" id="resNombre"></div>
+        <div class="quote-item" id="resEmail"></div>
+        <div class="quote-item" id="resServicio"></div>
+        <div class="quote-item" id="resDescripcion"></div>
+        <div
+          class="quote-item"
+          id="resPrecio"
+          style="font-weight: 700; color: #764ba2"
+        ></div>
+      </div>
+    </div>
+
+    <script>
+      (function () {
+        const form = document.getElementById("quoteForm");
+        const resultado = document.getElementById("resultadoCotizacion");
+        const resNombre = document.getElementById("resNombre");
+        const resEmail = document.getElementById("resEmail");
+        const resServicio = document.getElementById("resServicio");
+        const resDescripcion = document.getElementById("resDescripcion");
+        const resPrecio = document.getElementById("resPrecio");
+
+        // Pricing rules for each service type (in local currency units)
+        const precios = {
+          constitucion: 1500,
+          defensa: 1000,
+          consultoria: 1200,
+        };
+
+        // Service display names
+        const nombresServicios = {
+          constitucion: "Constitución de empresa",
+          defensa: "Defensa laboral",
+          consultoria: "Consultoría tributaria",
+        };
+
+        form.addEventListener("submit", function (event) {
+          event.preventDefault();
+
+          const nombre = form.clienteNombre.value.trim();
+          const email = form.clienteEmail.value.trim();
+          const servicio = form.tipoServicio.value;
+          const descripcion = form.descripcion.value.trim();
+
+          if (!nombre || !email || !servicio || !descripcion) {
+            alert("Por favor, completa todos los campos.");
+            return;
+          }
+
+          // Generate the quote - base price from the service type
+          let precioBase = precios[servicio] || 0;
+
+          // Optionally, add a small complexity fee based on description length
+          let descripcionLength = descripcion.length;
+          let extraCosto = 0;
+          if (descripcionLength > 150) {
+            extraCosto = 300;
+          } else if (descripcionLength > 75) {
+            extraCosto = 150;
+          }
+
+          let precioFinal = precioBase + extraCosto;
+
+          // Show the quote details
+          resNombre.textContent = `Cliente: ${nombre}`;
+          resEmail.textContent = `Correo electrónico: ${email}`;
+          resServicio.textContent = `Tipo de servicio: ${nombresServicios[servicio]}`;
+          resDescripcion.textContent = `Descripción del caso: ${descripcion}`;
+          resPrecio.textContent = `Precio estimado: $${precioFinal.toLocaleString()} COP`;
+
+          resultado.style.display = "block";
+        });
+      })();
+    </script>
+  </body>
+</html>
