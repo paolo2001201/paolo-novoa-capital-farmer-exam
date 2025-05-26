@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Autenticación Básica con Diseño Responsive y Validación</title>
+<style>
+  /* Reset */
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    background: linear-gradient(135deg, #74ebd5 0%, #ACB6E5 100%);
+    color: #333;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 1rem;
+  }
+
+  #app {
+    background: #fff;
+    padding: 2rem 3rem;
+    border-radius: 12px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    max-width: 400px;
+    width: 100%;
+  }
+
+  h1 {
+    text-align: center;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+    background: linear-gradient(90deg, #6a11cb 0%, #2575fc 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  form {
+    display: flex;
+    flex-direction: column;
+  }
+
+  label {
+    margin-bottom: 0.3rem;
+    font-weight: 600;
+  }
+
+  input[type="email"],
+  input[type="password"] {
+    padding: 0.7rem 1rem;
+    font-size: 1rem;
+    border: 2px solid #ddd;
+    border-radius: 6px;
+    margin-bottom: 1em;
+    transition: border-color 0.3s ease;
+  }
+
+  input[type="email"]:focus,
+  input[type="password"]:focus {
+    border-color: #2575fc;
+    outline: none;
+  }
+
+  .error-message {
+    color: #d93025;
+    font-size: 0.85rem;
+    margin-top: -0.8rem;
+    margin-bottom: 1rem;
+    height: 18px;
+  }
+
+  button {
+    background: #2575fc;
+    color: white;
+    border: none;
+    padding: 0.9rem;
+    font-size: 1.1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 700;
+    transition: background 0.3s ease;
+  }
+
+  button:disabled {
+    background: #8ea9e6;
+    cursor: not-allowed;
+  }
+
+  button:hover:not(:disabled) {
+    background: #155bb5;
+  }
+
+  #welcome-section {
+    text-align: center;
+  }
+
+  #logout-btn {
+    margin-top: 2rem;
+    background: #d93025;
+  }
+
+  #logout-btn:hover {
+    background: #a12219;
+  }
+
+  /* Responsive for smaller mobiles */
+  @media (max-width: 400px) {
+    #app {
+      padding: 1.5rem 1.8rem;
+      border-radius: 8px;
+    }
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <h1>Iniciar Sesión</h1>
+  <form id="login-form" novalidate>
+    <label for="email">Correo Electrónico</label>
+    <input type="email" id="email" name="email" placeholder="ejemplo@dominio.com" required />
+    <div id="email-error" class="error-message"></div>
+
+    <label for="password">Contraseña</label>
+    <input type="password" id="password" name="password" placeholder="Tu contraseña" required minlength="6" />
+    <div id="password-error" class="error-message"></div>
+
+    <button type="submit" id="login-btn" disabled>Ingresar</button>
+  </form>
+
+  <section id="welcome-section" style="display:none;">
+    <h2>Bienvenido, <span id="user-email"></span>!</h2>
+    <button id="logout-btn">Cerrar Sesión</button>
+  </section>
+</div>
+
+<script>
+  const loginForm = document.getElementById('login-form');
+  const emailInput = document.getElementById('email');
+  const passwordInput = document.getElementById('password');
+  const emailError = document.getElementById('email-error');
+  const passwordError = document.getElementById('password-error');
+  const loginBtn = document.getElementById('login-btn');
+  const welcomeSection = document.getElementById('welcome-section');
+  const userEmailSpan = document.getElementById('user-email');
+  const logoutBtn = document.getElementById('logout-btn');
+
+  let isEmailValid = false;
+  let isPasswordValid = false;
+
+  // Email validation with regex for email format
+  function validateEmail(email) {
+    const regex = /^[\\w-.]+@[\\w-]+\\.[a-z]{2,}$/i;
+    return regex.test(email.trim());
+  }
+
+  // Password validation: at least 6 characters
+  function validatePassword(password) {
+    return password.trim().length >= 6;
+  }
+
+  function validateForm() {
+    isEmailValid = validateEmail(emailInput.value);
+    isPasswordValid = validatePassword(passwordInput.value);
+
+    emailError.textContent = isEmailValid ? '' : 'Ingrese un correo electrónico válido.';
+    passwordError.textContent = isPasswordValid ? '' : 'La contraseña debe tener al menos 6 caracteres.';
+
+    loginBtn.disabled = !(isEmailValid && isPasswordValid);
+  }
+
+  emailInput.addEventListener('input', validateForm);
+  passwordInput.addEventListener('input', validateForm);
+
+  // Basic Authentication Simulation
+  // For demo, accept user: user@example.com & pass: password123
+  function authenticate(email, password) {
+    const validEmail = 'user@example.com';
+    const validPassword = 'password123';
+    return email === validEmail && password === validPassword;
+  }
+
+  loginForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    if (authenticate(emailInput.value.trim(), passwordInput.value.trim())) {
+      // Login success
+      loginForm.style.display = 'none';
+      welcomeSection.style.display = 'block';
+      userEmailSpan.textContent = emailInput.value.trim();
+
+      // Clear inputs and errors
+      emailInput.value = '';
+      passwordInput.value = '';
+      emailError.textContent = '';
+      passwordError.textContent = '';
+      loginBtn.disabled = true;
+    } else {
+      alert('Credenciales incorrectas. Por favor, intente de nuevo.');
+    }
+  });
+
+  logoutBtn.addEventListener('click', () => {
+    welcomeSection.style.display = 'none';
+    loginForm.style.display = 'flex';
+  });
+
+  // Simple unit tests for validation functions
+  function runTests() {
+    const tests = [];
+
+    // Email valid tests
+    tests.push({name: "Email valid", fn: () => validateEmail('test@example.com') === true });
+    tests.push({name: "Email invalid no @", fn: () => validateEmail('testexample.com') === false });
+    tests.push({name: "Email invalid no domain", fn: () => validateEmail('test@.com') === false });
+
+    // Password tests
+    tests.push({name: "Password valid min length", fn: () => validatePassword('abcdef') === true });
+    tests.push({name: "Password too short", fn: () => validatePassword('123') === false });
+
+    // Run tests and output results
+    console.group('Unit Tests');
+    tests.forEach(test => {
+      try {
+        const result = test.fn();
+        console.log(`${test.name}: ${result ? 'PASSED' : 'FAILED'}`);
+      } catch (e) {
+        console.error(`${test.name}: ERROR`, e);
+      }
+    });
+    console.groupEnd();
+  }
+
+  // Run tests on load
+  runTests();
+
+</script>
+</body>
+</html>
+
